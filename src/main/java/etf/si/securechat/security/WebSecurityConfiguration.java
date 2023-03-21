@@ -53,6 +53,7 @@ public class WebSecurityConfiguration{
                 .and().authorizeHttpRequests()
                 .requestMatchers(HttpMethod.GET, "/users/login").permitAll() //enables unauthorized requests
                 .requestMatchers(HttpMethod.POST, "/users/signup").permitAll()
+                .requestMatchers(HttpMethod.GET, "/ws/**").permitAll()
                 .anyRequest().authenticated().and();
         http.addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
@@ -63,8 +64,8 @@ public class WebSecurityConfiguration{
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(false);
-        config.addAllowedOrigin("*");
+        config.setAllowCredentials(true);
+        config.addAllowedOriginPattern("*");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);

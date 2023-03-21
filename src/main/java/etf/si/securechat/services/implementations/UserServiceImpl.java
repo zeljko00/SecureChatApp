@@ -46,6 +46,7 @@ public class UserServiceImpl implements UserService {
             JwtUser user = (JwtUser) authenticate.getPrincipal();
             String token = jwtUtil.generateToken(user);
             System.out.println("Generated token: " + token);
+            if(activeUsers.contains(username)==false)
             activeUsers.add(username);
             return token;
         } catch (Exception e) {
@@ -53,9 +54,9 @@ public class UserServiceImpl implements UserService {
             return null;
         }
     }
-    public void logout(String username,String password){
+    public void logout(String username){
         User user=userDAO.findUserByUsername(username);
-        if(user!=null && user.getPassword().equals(password))
+        if(user!=null)
             activeUsers.remove(username);
     }
 
@@ -70,5 +71,9 @@ public class UserServiceImpl implements UserService {
             return true;
         } else
             return false;
+    }
+
+    public List<String> activeUsers(){
+        return activeUsers;
     }
 }

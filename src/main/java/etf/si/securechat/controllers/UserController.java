@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
+import java.util.List;
 
 @Controller
 @RequestMapping("/users")
@@ -36,7 +37,10 @@ public class UserController {
         else
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
-
+    @GetMapping
+    public ResponseEntity<List<String>> activeUsers() {
+        return new ResponseEntity<>(userService.activeUsers(),HttpStatus.OK);
+    }
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody User user) {
         boolean result = userService.register(user.getUsername(), user.getPassword());
@@ -45,10 +49,4 @@ public class UserController {
         else
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestBody User user) {
-        userService.logout(user.getUsername(),user.getPassword());
-            return new ResponseEntity<>(HttpStatus.OK);
-    }
-
 }
