@@ -53,7 +53,7 @@ public class WebSecurityConfiguration{
                 .and().authorizeHttpRequests()
                 .requestMatchers(HttpMethod.GET, "/users/login").permitAll() //enables unauthorized requests
                 .requestMatchers(HttpMethod.POST, "/users/signup").permitAll()
-                .requestMatchers(HttpMethod.GET, "/ws/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
                 .anyRequest().authenticated().and();
         http.addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

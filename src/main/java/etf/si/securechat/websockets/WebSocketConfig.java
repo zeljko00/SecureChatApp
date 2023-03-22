@@ -13,7 +13,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         //specifikujemo prefikse za topice koje cemo koristiti
-        config.enableSimpleBroker("/chatroom","/user");
+        config.enableSimpleBroker("/chatroom/users","/user");
         //klijenti treba da salju poruke na endpoint specifikovan sa ApplicationDestinationPrefix-om + putanja specifikovana
         //@MessageMapping anotacijama (koja ustvari govori kojoj metodi kontrolera se rutira poruka)
         config.setApplicationDestinationPrefixes("/app");

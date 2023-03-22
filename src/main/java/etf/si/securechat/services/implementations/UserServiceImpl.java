@@ -11,8 +11,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.List;
+
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,7 +23,7 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final BCryptPasswordEncoder encoder;
-    private final List<String> activeUsers=new ArrayList<>();
+    private final List<String> activeUsers = new ArrayList<>();
 
     public UserServiceImpl(UserDAO userDAO, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
         this.userDAO = userDAO;
@@ -36,6 +37,8 @@ public class UserServiceImpl implements UserService {
     }
 
     public String login(String username, String password) {
+        if (activeUsers.contains(username))
+            return null;
         try {
             Authentication authenticate = authenticationManager
                     .authenticate(
@@ -45,19 +48,36 @@ public class UserServiceImpl implements UserService {
                     );
             JwtUser user = (JwtUser) authenticate.getPrincipal();
             String token = jwtUtil.generateToken(user);
-            System.out.println("Generated token: " + token);
-            if(activeUsers.contains(username)==false)
-            activeUsers.add(username);
+//          System.out.println("Generated token: " + token);
             return token;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
-    public void logout(String username){
-        User user=userDAO.findUserByUsername(username);
-        if(user!=null)
-            activeUsers.remove(username);
+    public String join(String token){
+        try {
+            String username = jwtUtil.getUsernameFromToken(token);
+            if (activeUsers.contains(username)==false) {
+                activeUsers.add(username);
+                return username;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    public String logout(String token) {
+        try {
+            String username = jwtUtil.getUsernameFromToken(token);
+            if (activeUsers.contains(username)) {
+                activeUsers.remove(username);
+                return username;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public boolean register(String username, String password) {
@@ -73,7 +93,7 @@ public class UserServiceImpl implements UserService {
             return false;
     }
 
-    public List<String> activeUsers(){
+    public List<String> activeUsers() {
         return activeUsers;
     }
 }

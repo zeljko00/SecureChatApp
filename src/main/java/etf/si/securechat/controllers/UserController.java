@@ -16,9 +16,11 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
     private final Base64.Decoder decoder;
+    private final MessageController messageController;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, MessageController messageController) {
         this.userService = userService;
+        this.messageController = messageController;
         this.decoder = Base64.getDecoder();
     }
 
@@ -37,10 +39,12 @@ public class UserController {
         else
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
+
     @GetMapping
     public ResponseEntity<List<String>> activeUsers() {
-        return new ResponseEntity<>(userService.activeUsers(),HttpStatus.OK);
+        return new ResponseEntity<>(userService.activeUsers(), HttpStatus.OK);
     }
+
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody User user) {
         boolean result = userService.register(user.getUsername(), user.getPassword());
