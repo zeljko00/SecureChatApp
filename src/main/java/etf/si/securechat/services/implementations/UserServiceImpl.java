@@ -1,7 +1,9 @@
 package etf.si.securechat.services.implementations;
 
 import etf.si.securechat.DAO.UserDAO;
+import etf.si.securechat.model.DTO.ChatroomRequest;
 import etf.si.securechat.model.DTO.JwtUser;
+import etf.si.securechat.model.DTO.UserData;
 import etf.si.securechat.model.User;
 import etf.si.securechat.security.JwtUtil;
 import etf.si.securechat.services.UserService;
@@ -23,7 +25,7 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final BCryptPasswordEncoder encoder;
-    private final List<String> activeUsers = new ArrayList<>();
+    private final List<UserData> activeUsers = new ArrayList<>();
 
     public UserServiceImpl(UserDAO userDAO, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
         this.userDAO = userDAO;
@@ -37,6 +39,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public String login(String username, String password) {
+        // user that already joined chat, and previously loged in, cant log in again
         if (activeUsers.contains(username))
             return null;
         try {
@@ -47,33 +50,50 @@ public class UserServiceImpl implements UserService {
                             )
                     );
             JwtUser user = (JwtUser) authenticate.getPrincipal();
+            // generating new JWT for authenticated user
             String token = jwtUtil.generateToken(user);
-//          System.out.println("Generated token: " + token);
             return token;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
-    public String join(String token){
+
+    public UserData join(ChatroomRequest request) {
         try {
-            String username = jwtUtil.getUsernameFromToken(token);
-            if (activeUsers.contains(username)==false) {
-                activeUsers.add(username);
-                return username;
+            // extracting username from received token
+            String username = jwtUtil.getUsernameFromToken(request.getToken());
+            UserData user = new UserData();
+            user.setUsername(username);
+            user.setKey(request.getKey());
+            System.out.println(username + " trying to join!");
+//            System.out.println(activeUsers);
+            synchronized (activeUsers) {
+                // user can join chat only if he hadn't already done that
+                if (activeUsers.contains(user) == false) {
+                    activeUsers.add(user);
+                    System.out.println(username+" joined!");
+                    return user;
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
+
     public String logout(String token) {
         try {
             String username = jwtUtil.getUsernameFromToken(token);
-            if (activeUsers.contains(username)) {
-                activeUsers.remove(username);
+            UserData user = new UserData();
+            user.setUsername(username);
+            System.out.println(activeUsers);
+            synchronized (activeUsers){
+            if (activeUsers.contains(user)) {
+                activeUsers.remove(user);
+                System.out.println(username+" left!");
                 return username;
-            }
+            }}
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -93,7 +113,7 @@ public class UserServiceImpl implements UserService {
             return false;
     }
 
-    public List<String> activeUsers() {
+    public List<UserData> activeUsers() {
         return activeUsers;
     }
 }

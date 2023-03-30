@@ -48,4 +48,8 @@ public class JwtUtil {
         final String username = getUsernameFromToken(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token) && userDetails.isAccountNonLocked());
     }
+    public boolean validate(String token){
+        getUsernameFromToken(token);
+        return !isTokenExpired(token);
+    }
 }

@@ -1,5 +1,7 @@
 package etf.si.securechat.services;
 
+import etf.si.securechat.model.DTO.ChatroomRequest;
+import etf.si.securechat.model.DTO.UserData;
 import etf.si.securechat.model.User;
 
 import java.util.Optional;
@@ -10,6 +12,6 @@ public interface UserService {
     String login(String username, String password);
     boolean register(String username,String password);
     String logout(String token);
-    String join(String token);
-    List<String> activeUsers();
+    UserData join(ChatroomRequest request);
+    List<UserData> activeUsers();
 }

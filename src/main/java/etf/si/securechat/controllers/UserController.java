@@ -1,5 +1,6 @@
 package etf.si.securechat.controllers;
 
+import etf.si.securechat.model.DTO.UserData;
 import etf.si.securechat.model.User;
 import etf.si.securechat.services.UserService;
 import org.springframework.http.HttpHeaders;
@@ -23,7 +24,7 @@ public class UserController {
         this.messageController = messageController;
         this.decoder = Base64.getDecoder();
     }
-
+    // extracts credentials from Authorization header, decodes them, checks validity and returns generated JWT
     @GetMapping("/login")
     public ResponseEntity<String> login(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
         String[] tokens = auth.split(" ");
@@ -41,7 +42,7 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<String>> activeUsers() {
+    public ResponseEntity<List<UserData>> activeUsers() {
         return new ResponseEntity<>(userService.activeUsers(), HttpStatus.OK);
     }
 
