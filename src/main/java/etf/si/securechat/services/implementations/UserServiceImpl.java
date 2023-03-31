@@ -60,6 +60,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public UserData join(ChatroomRequest request) {
+        // if token is invalid, exception will be thrown and joining will be disabled
         try {
             // extracting username from received token
             String username = jwtUtil.getUsernameFromToken(request.getToken());
@@ -70,7 +71,7 @@ public class UserServiceImpl implements UserService {
 //            System.out.println(activeUsers);
             synchronized (activeUsers) {
                 // user can join chat only if he hadn't already done that
-                if (activeUsers.contains(user) == false) {
+                if (activeUsers.contains(user) == false && jwtUtil.validate(request.getToken())) {
                     activeUsers.add(user);
                     System.out.println(username+" joined!");
                     return user;
@@ -89,7 +90,7 @@ public class UserServiceImpl implements UserService {
             user.setUsername(username);
             System.out.println(activeUsers);
             synchronized (activeUsers){
-            if (activeUsers.contains(user)) {
+            if (activeUsers.contains(user)  && jwtUtil.validate(token)) {
                 activeUsers.remove(user);
                 System.out.println(username+" left!");
                 return username;
