@@ -5,6 +5,7 @@ import etf.si.securechat.model.DTO.MessageFragment;
 import etf.si.securechat.model.DTO.UserData;
 import etf.si.securechat.security.JwtUtil;
 import etf.si.securechat.services.UserService;
+import etf.si.securechat.util.LoggerBean;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -17,12 +18,14 @@ public class MessageController {
     private final SimpMessagingTemplate simpMessageTemplate;
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final LoggerBean loggerBean;
 
 
-    public MessageController(SimpMessagingTemplate simpMessageTemplate, UserService userService, JwtUtil jwtUtil) {
+    public MessageController(SimpMessagingTemplate simpMessageTemplate, UserService userService, JwtUtil jwtUtil, LoggerBean loggerBean) {
         this.simpMessageTemplate = simpMessageTemplate;
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.loggerBean = loggerBean;
     }
     //WebSocket message sent to /chatroom/join endpoint will be handled by this method
     @MessageMapping("/chatroom/join")
@@ -57,10 +60,15 @@ public class MessageController {
         try {
             boolean flag = jwtUtil.validate(messageFragment.getToken());
             // additional condition
-            if(!flag || jwtUtil.getUsernameFromToken(messageFragment.getToken()).equals(messageFragment.getSender())==false)
+            if(!flag)
                 throw new Exception();
+            if(!jwtUtil.getUsernameFromToken(messageFragment.getToken()).equals(messageFragment.getSender())){
+                loggerBean.logSecurityRisk("Message failure - sender forgery: "+messageFragment.getSender());
+                return null;
+            }
         }catch(Exception e){
             System.out.println("Invalid token!");
+            loggerBean.logSecurityRisk("Message failure - invalid token: "+messageFragment.getToken());
             return null;
         }
         //dynamically creates topic for recipient

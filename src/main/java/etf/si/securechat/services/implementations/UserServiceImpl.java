@@ -7,6 +7,7 @@ import etf.si.securechat.model.DTO.UserData;
 import etf.si.securechat.model.User;
 import etf.si.securechat.security.JwtUtil;
 import etf.si.securechat.services.UserService;
+import etf.si.securechat.util.LoggerBean;
 import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,11 +30,12 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
     private final BCryptPasswordEncoder encoder;
     private final List<UserData> activeUsers = new ArrayList<>();
-
-    public UserServiceImpl(UserDAO userDAO, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+    private final LoggerBean loggerBean;
+    public UserServiceImpl(UserDAO userDAO, AuthenticationManager authenticationManager, JwtUtil jwtUtil, LoggerBean loggerBean) {
         this.userDAO = userDAO;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.loggerBean = loggerBean;
         encoder = new BCryptPasswordEncoder();
     }
 
@@ -45,8 +47,9 @@ public class UserServiceImpl implements UserService {
 //        // user that already joined chat, and previously loged in, cant log in again
 //        if (activeUsers.contains(username))
 //            return null;
-        if (username.length()> MAX_LEN || password.length()>MAX_LEN)
-            return null;
+        if (username.length()> MAX_LEN || password.length()>MAX_LEN){
+            loggerBean.logSecurityRisk("Login failure - invalid credentials length: "+username+" "+password);
+            return null;}
         try {
             Authentication authenticate = authenticationManager
                     .authenticate(
@@ -59,6 +62,7 @@ public class UserServiceImpl implements UserService {
             String token = jwtUtil.generateToken(user);
             return token;
         } catch (Exception e) {
+            loggerBean.logSecurityRisk("Login failure - invalid credentials: "+username+" "+password);
             e.printStackTrace();
             return null;
         }
@@ -83,6 +87,7 @@ public class UserServiceImpl implements UserService {
                 }
             }
         } catch (Exception e) {
+            loggerBean.logSecurityRisk("Chatroom join failure - invalid token: "+request.getToken());
             e.printStackTrace();
         }
         return null;
@@ -101,14 +106,17 @@ public class UserServiceImpl implements UserService {
                 return username;
             }}
         } catch (Exception e) {
+            loggerBean.logSecurityRisk("Logout failure - invalid token: "+token);
             e.printStackTrace();
         }
         return null;
     }
 
     public boolean register(String username, String password) {
-        if (username.length()> MAX_LEN || password.length()>MAX_LEN)
+        if (username.length()> MAX_LEN || password.length()>MAX_LEN){
+            loggerBean.logSecurityRisk("Login failure - invalid credentials length: "+username+" "+password);
             return false;
+        }
         boolean secure=Arrays.stream(FORBIDDEN_PATTERNS).map(p -> {
             if(username.toLowerCase().contains(p) || password.toLowerCase().contains(p))
                 return false;
@@ -116,6 +124,7 @@ public class UserServiceImpl implements UserService {
         }).reduce(true,(b1,b2)-> { return b1 && b2; });
         if(!secure){
             System.out.println("Security risk!");
+            loggerBean.logSecurityRisk("Signup failure - invalid credentials - malicious pattern : "+username+" "+password);
             return false;
         }
         User user = userDAO.findUserByUsername(username);
@@ -129,7 +138,6 @@ public class UserServiceImpl implements UserService {
         } else
             return false;
     }
-
     public List<UserData> activeUsers() {
         return activeUsers;
     }
