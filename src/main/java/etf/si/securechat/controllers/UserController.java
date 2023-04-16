@@ -45,6 +45,10 @@ public class UserController {
     public ResponseEntity<List<UserData>> activeUsers() {
         return new ResponseEntity<>(userService.activeUsers(), HttpStatus.OK);
     }
+//    @GetMapping("/test")
+//    public ResponseEntity<String> test() {
+//        return new ResponseEntity<>("succeed!", HttpStatus.OK);
+//    }
 
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody User user) {

@@ -15,12 +15,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
+    private static final int MAX_LEN=30;
+    private static final String[] FORBIDDEN_PATTERNS={"\"","'","create","#","alter","drop","set","update","delete","script","select","table"};
     private final UserDAO userDAO;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
@@ -39,8 +42,10 @@ public class UserServiceImpl implements UserService {
     }
 
     public String login(String username, String password) {
-        // user that already joined chat, and previously loged in, cant log in again
-        if (activeUsers.contains(username))
+//        // user that already joined chat, and previously loged in, cant log in again
+//        if (activeUsers.contains(username))
+//            return null;
+        if (username.length()> MAX_LEN || password.length()>MAX_LEN)
             return null;
         try {
             Authentication authenticate = authenticationManager
@@ -102,6 +107,17 @@ public class UserServiceImpl implements UserService {
     }
 
     public boolean register(String username, String password) {
+        if (username.length()> MAX_LEN || password.length()>MAX_LEN)
+            return false;
+        boolean secure=Arrays.stream(FORBIDDEN_PATTERNS).map(p -> {
+            if(username.toLowerCase().contains(p) || password.toLowerCase().contains(p))
+                return false;
+            else return true;
+        }).reduce(true,(b1,b2)-> { return b1 && b2; });
+        if(!secure){
+            System.out.println("Security risk!");
+            return false;
+        }
         User user = userDAO.findUserByUsername(username);
         if (user == null) {
             User newUser = new User();

@@ -56,7 +56,8 @@ public class MessageController {
         // check token validity
         try {
             boolean flag = jwtUtil.validate(messageFragment.getToken());
-            if(!flag)
+            // additional condition
+            if(!flag || jwtUtil.getUsernameFromToken(messageFragment.getToken()).equals(messageFragment.getSender())==false)
                 throw new Exception();
         }catch(Exception e){
             System.out.println("Invalid token!");
